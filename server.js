@@ -2,10 +2,25 @@ const express = require("express");
 // express() = app object returned = main app
 const app = express();
 const path = require("path");
+const { logger } = require("./middleware/logger");
+const errorHandler = require("./middleware/errorHandler");
+// 2.3 cookieParser3
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
+const corsOptions = require("./config/corsOptions");
 const PORT = process.env.PORT || 3500;
 
-// express.static = serve static assets, e.g. css / images
-app.use("/", express.static(path.join(__dirname, "/public")));
+// match with logs\reqLog.log
+app.use(logger);
+
+app.use(cors(corsOptions));
+// https://www.geeksforgeeks.org/express-js-express-json-function/
+// express.json() = built-in middleware = parses incoming requests with JSON payloads, return object
+app.use(express.json());
+
+app.use(cookieParser());
+// express.static = middleware = serve static assets, e.g. css / images
+app.use("/", express.static(path.join(__dirname, "public")));
 
 // server.js -> root.js -> index.html -> style.css
 app.use("/", require("./routes/root"));
@@ -24,5 +39,7 @@ app.all("*", (req, res) => {
     res.type("txt").send("404 Not Found");
   }
 });
+
+app.use(errorHandler);
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
